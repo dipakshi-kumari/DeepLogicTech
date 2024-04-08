@@ -7,13 +7,11 @@ const port = 3000;
 app.get('/latest-stories', (req, res) => {
     https.get('https://time.com', (response) => {
         let data = '';
-
-        // A chunk of data has been received.
+    
+        //Extracting time.com html
         response.on('data', (chunk) => {
             data += chunk;
         });
-
-        // The whole response has been received.
         response.on('end', () => {
             const stories = parseStories(data);
             res.json(stories);
@@ -22,14 +20,17 @@ app.get('/latest-stories', (req, res) => {
         console.log("Error: " + err.message);
         res.status(500).send('Error fetching stories');
     });
+
+
 });
 
+//Function to search for latest stories in html
 function parseStories(html) {
     const stories = [];
     let index = 0;
 
     while (stories.length < 6) {
-        // Find the start of the link and title
+        // Finding the start of the link and title
         let linkStart = html.indexOf('<li class="latest-stories__item">', index);
         if (linkStart === -1) break;
         linkStart = html.indexOf('href="', linkStart) + 6;
@@ -37,13 +38,14 @@ function parseStories(html) {
         let titleStart = html.indexOf('<h3 class="latest-stories__item-headline">', linkEnd) + '<h3 class="latest-stories__item-headline">'.length;
         let titleEnd = html.indexOf('</h3>', titleStart);
 
-        // Extract the link and title
+        // Extracting link and title
         const link = html.substring(linkStart, linkEnd);
         const title = html.substring(titleStart, titleEnd);
 
+        //Pushing title to stories
         stories.push({ title, link: `https://time.com${link}` });
 
-        // Update the index to search for the next story
+        // Updating index to search for the next story
         index = titleEnd;
     }
 
